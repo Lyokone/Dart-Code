@@ -20,6 +20,7 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 		{ deviceId: flutterTestDeviceId },
 		extraConfiguration,
 	);
+	console.log("coucou");
 	const config = await getLaunchConfiguration(script, extraConfiguration);
 	if (!config)
 		throw new Error(`Could not get launch configuration (got ${config})`);

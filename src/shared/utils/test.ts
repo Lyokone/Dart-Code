@@ -3,7 +3,7 @@ import { BasicDebugConfiguration } from "../../shared/debug/interfaces";
 import { escapeRegExp } from "../../shared/utils";
 import { OpenedFileInformation } from "../interfaces";
 
-export function getLaunchConfig(noDebug: boolean, path: string, testNames: TestName[] | undefined, runSkippedTests?: boolean, template?: any | undefined): BasicDebugConfiguration {
+export function getLaunchConfig(noDebug: boolean, updateGolden: boolean, path: string, testNames: TestName[] | undefined, runSkippedTests?: boolean, template?: any | undefined): BasicDebugConfiguration {
 	let toolArgs: string[] = [];
 	if (template?.toolArgs)
 		toolArgs = toolArgs.concat(template?.toolArgs as []);
@@ -21,6 +21,7 @@ export function getLaunchConfig(noDebug: boolean, path: string, testNames: TestN
 			noDebug,
 			request: "launch",
 			type: "dart",
+			updateGolden,
 		},
 		template,
 		{

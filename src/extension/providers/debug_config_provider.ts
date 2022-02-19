@@ -679,6 +679,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.deviceId)
 			this.addArgsIfNotExist(args, "-d", debugConfig.deviceId);
 
+		if (debugConfig.updateGolden)
+			this.addArgsIfNotExist(args, "--update-goldens");
+
+
 		if (conf.suppressTestTimeouts === "always" || (conf.suppressTestTimeouts === "debug" && !debugConfig.noDebug))
 			this.addArgsIfNotExist(args, "--timeout", "1d");
 

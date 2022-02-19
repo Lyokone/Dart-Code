@@ -30,8 +30,9 @@ export class TestCommands implements vs.Disposable {
 
 	constructor(protected readonly logger: Logger, private readonly testModel: TestModel, protected readonly wsContext: WorkspaceContext, private readonly vsCodeTestController: VsCodeTestController | undefined, protected readonly flutterCapabilities: FlutterCapabilities) {
 		this.disposables.push(
-			vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(false, test, launchTemplate)),
-			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
+			vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(false, false, test, launchTemplate)),
+			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, false, test, launchTemplate)),
+			vs.commands.registerCommand("_dart.startUpdateGoldensFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, true, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), true, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), false, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
 			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suites?: SuiteNode[], testRun?: vs.TestRun) => this.runAllTestsWithoutDebugging(suites, testRun)),
@@ -106,6 +107,7 @@ export class TestCommands implements vs.Disposable {
 			testNames: undefined,
 			testRun,
 			token: undefined,
+			updateGolden: false,
 			useLaunchJsonTestTemplate: true,
 		})));
 	}
@@ -124,11 +126,12 @@ export class TestCommands implements vs.Disposable {
 			testNames,
 			testRun,
 			token,
+			updateGolden: false,
 			useLaunchJsonTestTemplate: true,
 		});
 	}
 
-	private runTests({ programPath, debug, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, testRun, token, useLaunchJsonTestTemplate }: TestLaunchInfo): Promise<boolean> {
+	private runTests({ programPath, debug, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, testRun, token, useLaunchJsonTestTemplate, updateGolden }: TestLaunchInfo): Promise<boolean> {
 		if (useLaunchJsonTestTemplate) {
 			// Get the default Run/Debug template for running/debugging tests and use that as a base.
 			const requiredName = debug ? "Debug" : "Run";
@@ -147,6 +150,7 @@ export class TestCommands implements vs.Disposable {
 				suppressPromptOnErrors,
 				...getLaunchConfig(
 					!debug,
+					updateGolden,
 					programPath,
 					testNames,
 					shouldRunSkippedTests,
@@ -218,7 +222,7 @@ export class TestCommands implements vs.Disposable {
 		return names;
 	}
 
-	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {
+	private startTestFromOutline(noDebug: boolean, updateGolden: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {
 		const canRunSkippedTest = !test.isGroup && (this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(test.file)));
 		const shouldRunSkippedTests = canRunSkippedTest; // These are the same when running directly, since we always run skipped.
 
@@ -231,6 +235,7 @@ export class TestCommands implements vs.Disposable {
 			testNames: [{ name: test.fullName, isGroup: test.isGroup }],
 			testRun: undefined,
 			token: undefined,
+			updateGolden,
 		});
 	}
 
@@ -338,6 +343,7 @@ export class TestCommands implements vs.Disposable {
 interface TestLaunchInfo {
 	programPath: string;
 	debug: boolean;
+	updateGolden: boolean;
 	testNames: TestName[] | undefined;
 	shouldRunSkippedTests: boolean;
 	suppressPromptOnErrors: boolean;

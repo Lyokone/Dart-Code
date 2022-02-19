@@ -20,7 +20,7 @@ export function getLaunchConfigDefaultTemplate(documentUri: Uri): TemplatedLaunc
 
 export function getTemplatedLaunchConfigs(documentUri: Uri, fileType: string): TemplatedLaunchConfig[] {
 	const runConfigs: TemplatedLaunchConfig[] = workspace.getConfiguration("launch", documentUri).get<any[]>("configurations") || [];
-	const wantedTemplateTypes = [`run-${fileType}`, `debug-${fileType}`];
+	const wantedTemplateTypes = [`run-${fileType}`, `debug-${fileType}`, `golden-${fileType}`];
 	const filePath = fsPath(documentUri);
 	const workspaceUri = workspace.getWorkspaceFolder(documentUri)?.uri;
 	const workspacePath = workspaceUri ? fsPath(workspaceUri) : undefined;
@@ -47,6 +47,7 @@ export function getTemplatedLaunchConfigs(documentUri: Uri, fileType: string): T
 		if (defaultTemplate) {
 			runFileTemplates.push({ ...defaultTemplate, name: "Run", noDebug: true });
 			runFileTemplates.push({ ...defaultTemplate, name: "Debug" });
+			runFileTemplates.push({ ...defaultTemplate, name: "Update goldens", noDebug: true, updateGolden: true });
 		}
 	}
 
@@ -65,6 +66,7 @@ export interface TemplatedLaunchConfig {
 	name: string;
 	type?: string;
 	noDebug?: boolean;
+	updateGolden?: boolean;
 	templateFor?: string; // path to apply to
 	codeLens?: {
 		for: string | string[];
